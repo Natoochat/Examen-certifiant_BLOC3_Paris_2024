@@ -1,0 +1,15 @@
+{% extends "layout.html" %} {% block content %}
+<h1>Paiement</h1>
+<form method="POST">
+  <label for="carte">Numéro de carte :</label>
+  <input type="text" id="carte" name="carte" required />
+
+  <label for="expiration">Date d'expiration :</label>
+  <input type="text" id="expiration" name="expiration" required />
+
+  <label for="cvv">CVV :</label>
+  <input type="text" id="cvv" name="cvv" required />
+
+  <button type="submit" class="btn">Payer</button>
+</form>
+{% endblock %}

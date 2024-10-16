@@ -1,0 +1,39 @@
+{% extends "layout.html" %} {% block content %}
+<h1>Billets disponibles</h1>
+<ul class="billets">
+  {% for billet in billets %}
+  <li>
+    <h2>{{ billet[1] }}</h2>
+    <p>Prix : {{ billet[2] }} €</p>
+    <p>Disponibles : {{ billet[3] }}</p>
+
+    {% if billet[3] > 0 %}
+    <form
+      action="{{ url_for('ajouter_au_panier', id=billet[0]) }}"
+      method="post"
+    >
+      <div class="radio-container">
+        {% for quantite in [1, 2, 4] %}
+        <div class="radio-group">
+          <input
+            type="radio"
+            id="{{ quantite }}_{{ billet[0] }}"
+            name="quantite"
+            value="{{ quantite }}"
+          />
+          <label for="{{ quantite }}_{{ billet[0] }}"
+            >{{ quantite == 1 and "Solo" or (quantite == 2 and "Duo" or
+            "Famille") }} ({{ quantite }})</label
+          >
+        </div>
+        {% endfor %}
+      </div>
+      <button type="submit" class="btn">Ajouter au panier</button>
+    </form>
+    {% else %}
+    <p class="epuise">Aucun billet disponible.</p>
+    {% endif %}
+  </li>
+  {% endfor %}
+</ul>
+{% endblock %}

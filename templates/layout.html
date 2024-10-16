@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Site de vente de billets{% endblock %}</title>
+    <link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/reset.css') }}"
+  />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/styles.css') }}"
+    />
+  </head>
+  <body>
+    <header>
+      <nav class="navbar">
+        <ul class="nav_list">
+          <li class="nav_img">
+            <img
+              src="../static/img/mascotte-jo.png"
+              alt="Mascotte des JO sur la tour eiffel"
+            />
+          </li>
+          <li class="nav_item"><a href="{{ url_for('index') }}">Accueil</a></li>
+          <li class="nav_item">
+            <a href="{{ url_for('billets') }}">Billets</a>
+          </li>
+          {% if 'user_id' in session %}
+          <li class="nav_item"><a href="{{ url_for('panier') }}">Panier</a></li>
+          <li class="nav_item">
+            <a href="{{ url_for('logout') }}">Déconnexion</a>
+          </li>
+          {% else %}
+          <li class="nav_item">
+            <a href="{{ url_for('login') }}">Connexion</a>
+          </li>
+          <li class="nav_item">
+            <a href="{{ url_for('register') }}">Inscription</a>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+    </header>
+    <main>
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %} {% for category, message in messages %}
+      <div class="flash-{{ category }}">{{ message }}</div>
+      {% endfor %} {% endif %} {% endwith %} {% block content %}{% endblock %}
+    </main>
+    <footer>
+      <p>&copy; 2024 Site de vente de billets</p>
+    </footer>
+  </body>
+</html>

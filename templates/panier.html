@@ -1,0 +1,21 @@
+{% extends "layout.html" %} {% block content %}
+<h1>Votre panier</h1>
+{% if panier %}
+<ul class="panier">
+  {% for item in panier %}
+  <li>
+    <h2>{{ item.nom }}</h2>
+    <p>Prix unitaire : {{ "%.2f"|format(item.prix|float) }} €</p>
+    <p>Quantité : {{ item.quantite }}</p>
+    <p>Total : {{ "%.2f"|format((item.prix|float * item.quantite|int)) }} €</p>
+    <a href="{{ url_for('supprimer_du_panier', id=item.id) }}" class="btn"
+      >Supprimer</a
+    >
+  </li>
+  {% endfor %}
+</ul>
+<p>Total du panier : {{ "%.2f"|format(total|float) }} €</p>
+<a href="{{ url_for('paiement') }}" class="btn">Procéder au paiement</a>
+{% else %}
+<p>Votre panier est vide.</p>
+{% endif %} {% endblock %}
