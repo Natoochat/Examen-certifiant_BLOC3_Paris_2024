@@ -6,7 +6,6 @@ import os
 import mysql.connector
 from mysql.connector import Error
 import re
-import validators
 import requests
 import uuid
 import qrcode
@@ -15,14 +14,13 @@ from dotenv import load_dotenv
 
 load_dotenv()
 app = Flask(__name__, static_url_path='/static')
-app.secret_key = os.environ.get('SECRET_KEY', 'votre_clé_secrète_par_défaut')  # Utilisation d'une variable d'environnement pour la clé secrète
+app.secret_key = os.environ.get('SECRET_KEY', 'votre_clé_secrète_par_défaut')
 app.logger.setLevel(logging.INFO)
 bcrypt = Bcrypt(app)
 
 # Fonction de connexion à la base de données
 def get_db_connection():
     try:
-        # Vérification des variables d'environnement
         required_env_vars = ['DB_USER', 'DB_PASSWORD', 'DB_HOST', 'DB_PORT', 'DB_DATABASE', 'DB_SSL_CA']
         for var in required_env_vars:
             if os.getenv(var) is None:
@@ -45,21 +43,6 @@ def get_db_connection():
         app.logger.error(f"Erreur de connexion à la base de données: {err}")
         return None
 
-def send_email_via_api(to_email, subject, message):
-    API_KEY = os.environ.get('MAILGUN_API_KEY')  # Utilise les variables d'environnement pour sécuriser les clés d'API
-    DOMAIN_NAME = os.environ.get('MAILGUN_DOMAIN_NAME')
-    
-    if not API_KEY or not DOMAIN_NAME:
-        return False, "Clé d'API ou nom de domaine manquant."
-
-    return requests.post(
-        f"https://api.mailgun.net/v3/{DOMAIN_NAME}/messages",
-        auth=("api", API_KEY),
-        data={"from": f"Excited User <mailgun@{DOMAIN_NAME}>",
-            "to": [to_email],
-            "subject": subject,
-            "text": message})
-
 @app.route('/')
 def index():
     app.logger.info('Page d\'accueil visitée')
@@ -70,11 +53,10 @@ def index():
 @app.route('/billets')
 def billets():
     page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 100, type=int)  # Ajout d'un paramètre pour le nombre d'éléments par page
+    per_page = request.args.get('per_page', 100, type=int)
     offset = (page - 1) * per_page
 
-    billets = []  # Initialiser une liste vide pour les billets
-
+    billets = []
     cnx = get_db_connection()
     if cnx is None:
         app.logger.error("Erreur de connexion à la base de données")
@@ -92,15 +74,15 @@ def billets():
 
     return render_template('billets.html', billets=billets, page=page, per_page=per_page)
 
-
 @app.route('/ajouter_au_panier/<int:id>', methods=['POST'])
 def ajouter_au_panier(id):
     if 'user_id' not in session:
         flash('Veuillez vous connecter pour ajouter au panier.', 'error')
         return redirect(url_for('login'))
     
-    quantite = int(request.form['quantite'])
-    if quantite <= 0:
+    # Utilisez request.form.get pour éviter une KeyError
+    quantite = request.form.get('quantite', type=int)
+    if quantite is None or quantite <= 0:
         flash('La quantité doit être supérieure à zéro.', 'error')
         return redirect(url_for('billets'))
     
@@ -125,11 +107,13 @@ def ajouter_au_panier(id):
         
         session['panier'] = panier
         flash('Billet ajouté au panier!', 'success')
-        cnx.close()
     except Exception as e:
         flash('Une erreur est survenue lors de l\'ajout au panier.', 'error')
         app.logger.error(f"Erreur : {e}")
-    
+    finally:
+        cur.close()
+        cnx.close()
+
     return redirect(url_for('billets'))
 
 @app.route('/panier')
@@ -205,8 +189,8 @@ def download_qr(achat_key):
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        email = request.form['email']
-        password = request.form['password']
+        email = request.form.get('email')
+        password = request.form.get('password')
         
         cnx = get_db_connection()
         cur = cnx.cursor()
@@ -216,7 +200,7 @@ def login():
         cnx.close()
         
         if user and bcrypt.check_password_hash(user[4], password):
-            session['user_id'] = user[0]  # Stocke l'ID de l'utilisateur dans la session
+            session['user_id'] = user[0]
             flash('Connexion réussie !', 'success')
             return redirect(url_for('index'))
         else:
@@ -230,59 +214,43 @@ def register():
         secondname = request.form['secondname']
         email = request.form['email']
         password = request.form['password']
+        confirm_password = request.form['confirm_password']
 
-        # Vérifications de sécurité
-        if len(password) < 8:
-            flash('Le mot de passe doit avoir au moins 8 caractères.', 'error')
-            return render_template('register.html')
-        if not re.search(r"[$#@!%^&*()]", password):
-            flash('Le mot de passe doit contenir au moins un caractère spécial.', 'error')
-            return render_template('register.html')
-        if not validators.email(email):
+        if not re.match(r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$', email):
             flash('Adresse e-mail invalide.', 'error')
-            return render_template('register.html')
+            return redirect(url_for('register'))
 
-        # Hachage du mot de passe
+        if password != confirm_password:
+            flash('Les mots de passe ne correspondent pas.', 'error')
+            return redirect(url_for('register'))
+
         hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
-        # Génération de la clé d'enregistrement
-        registration_key = str(uuid.uuid4())
+        registration_key = str(uuid.uuid4())  # Générer une clé d'enregistrement unique
 
-        # Insertion dans la base de données
         try:
             cnx = get_db_connection()
             cur = cnx.cursor()
-            while True:
-                try:
-                    cur.execute("INSERT INTO users (firstname, secondname, email, password, registration_key) VALUES (%s, %s, %s, %s, %s)",
-                                (firstname, secondname, email, hashed_password, registration_key))
-                    cnx.commit()
-                    break  # Sortie de la boucle si l'insertion réussit
-                except mysql.connector.errors.IntegrityError as err:
-                    if 'Duplicate entry' in str(err) and 'registration_key' in str(err):
-                        registration_key = str(uuid.uuid4())  # Générer une nouvelle clé si elle est en double
-                    else:
-                        raise
-
-            # Envoi de l'email de confirmation via API
-            success, message = send_email_via_api(email, "Confirmation d'inscription",
-                f"Merci de vous être inscrit ! Veuillez confirmer votre adresse email en cliquant sur ce lien : {url_for('confirm_email', email=email, _external=True)}")
-
-            if success:
-                flash('Inscription réussie ! Vérifiez vos emails pour la confirmation.', 'success')
-            else:
-                flash(f"L'inscription a réussi, mais l'envoi de l'email a échoué : {message}", 'error')
-
-            return redirect(url_for('login'))
-        except Error as e:
-            cnx.rollback()
-            flash(f"Une erreur s'est produite lors de l'inscription : {str(e)}", 'error')
-            return render_template('register.html')
+            # Ajouter registration_key dans l'insertion
+            cur.execute("INSERT INTO users (firstname, secondname, email, password, registration_key) VALUES (%s, %s, %s, %s, %s)",
+                        (firstname, secondname, email, hashed_password, registration_key))
+            cnx.commit()
+            flash('Inscription réussie ! Vous pouvez maintenant vous connecter.', 'success')
+        except mysql.connector.Error as err:
+            app.logger.error(f"Erreur lors de l'inscription: {err}")
+            flash('Une erreur est survenue lors de l\'inscription. Veuillez réessayer.', 'error')
         finally:
             cur.close()
             cnx.close()
 
+        return redirect(url_for('login'))
+    
     return render_template('register.html')
 
+@app.route('/logout')
+def logout():
+    session.pop('user_id', None)
+    flash('Vous avez été déconnecté.', 'success')
+    return redirect(url_for('index'))
+
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
-    #app.run(debug=True)
+    app.run(debug=True)

@@ -1,10 +1,10 @@
 {% extends "layout.html" %} {% block content %}
 <h1>Inscription</h1>
 <form method="POST">
-  <label for="firstname">Nom :</label>
+  <label for="firstname">Prénom :</label>
   <input type="text" id="firstname" name="firstname" required />
 
-  <label for="secondname">Prénom :</label>
+  <label for="secondname">Nom :</label>
   <input type="text" id="secondname" name="secondname" required />
 
   <label for="email">Email :</label>
@@ -13,7 +13,22 @@
   <label for="password">Mot de passe :</label>
   <input type="password" id="password" name="password" required />
 
+  <label for="confirm_password">Confirmer le mot de passe :</label>
+  <input
+    type="password"
+    id="confirm_password"
+    name="confirm_password"
+    required
+  />
+
   <button type="submit" class="btn">S'inscrire</button>
 </form>
 <p>Déjà un compte ? <a href="{{ url_for('login') }}">Se connecter</a></p>
-{% endblock %}
+
+{% if get_flashed_messages() %}
+<ul>
+  {% for message in get_flashed_messages() %}
+  <li>{{ message }}</li>
+  {% endfor %}
+</ul>
+{% endif %} {% endblock %}
