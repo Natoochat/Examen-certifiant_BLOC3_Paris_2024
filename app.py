@@ -60,7 +60,8 @@ def billets():
     cnx = get_db_connection()
     if cnx is None:
         app.logger.error("Erreur de connexion à la base de données")
-        return render_template('error.html'), 500
+        return render_template('error.html',
+                            titre_hero="Erreur de connexion!",), 500
 
     try:
         with cnx.cursor() as cur:
@@ -68,7 +69,8 @@ def billets():
             billets = cur.fetchall()
     except mysql.connector.Error as err:
         app.logger.error(f"Erreur lors de l'exécution de la requête: {err}")
-        return render_template('error.html'), 500
+        return render_template('error.html',
+                            titre_hero="Erreur d'exécution !",), 500
     finally:
         cnx.close()
 
