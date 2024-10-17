@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 app = Flask(__name__, static_url_path='/static')
-app.secret_key = os.environ.get('SECRET_KEY', 'votre_clé_secrète_par_défaut')
+app.secret_key = os.environ.get('SECRET_KEY')
 app.logger.setLevel(logging.INFO)
 bcrypt = Bcrypt(app)
 
