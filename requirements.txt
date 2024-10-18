@@ -8,3 +8,4 @@ Pillow==10.3.0
 requests==2.32.3
 python-dotenv==1.0.0
 gunicorn==20.1.0
+url-parser==3.0.3

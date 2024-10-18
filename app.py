@@ -11,6 +11,7 @@ import uuid
 import qrcode
 import logging
 from dotenv import load_dotenv
+from url_parser import urlparse
 
 load_dotenv()
 app = Flask(__name__, static_url_path='/static')
@@ -21,24 +22,21 @@ bcrypt = Bcrypt(app)
 # Fonction de connexion à la base de données
 def get_db_connection():
     try:
-        required_env_vars = ['DB_USER', 'DB_PASSWORD', 'DB_HOST', 'DB_PORT', 'DB_DATABASE', 'DB_SSL_CA']
-        for var in required_env_vars:
-            if os.getenv(var) is None:
-                app.logger.error(f"La variable d'environnement {var} n'est pas définie.")
-                return None
-        
-        config = {
-            'user': os.getenv('DB_USER'),
-            'password': os.getenv('DB_PASSWORD'),
-            'host': os.getenv('DB_HOST'),
-            'port': os.getenv('DB_PORT'),
-            'database': os.getenv('DB_DATABASE'),
-            'ssl_ca': os.getenv('DB_SSL_CA')
-        }
-        
-        app.logger.info("Tentative de connexion à la base de données avec SSL...")
-        return mysql.connector.connect(**config)
-    
+        if 'DATABASE_URL' in os.environ:
+            url = urlparse.urlparse(os.environ['DATABASE_URL'])
+
+            config = {
+                'user': url.username,
+                'password': url.password,
+                'host': url.hostname,
+                'port': url.port,
+                'database': url.path[1:],  # Retirer le "/" initial
+                'ssl_ca': os.path.join(os.path.dirname(__file__), os.getenv('DB_SSL_CA'))  # Si SSL est requis
+            }
+            
+            app.logger.info("Tentative de connexion à la base de données avec SSL...")
+            return mysql.connector.connect(**config)
+
     except mysql.connector.Error as err:
         app.logger.error(f"Erreur de connexion à la base de données: {err}")
         return None
