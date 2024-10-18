@@ -10,6 +10,7 @@ import qrcode
 import logging
 from dotenv import load_dotenv
 from mysql.connector import errorcode
+import requests
 
 load_dotenv()
 app = Flask(__name__, static_url_path='/static')
@@ -249,25 +250,36 @@ def register():
         password = request.form['password']
         confirm_password = request.form['confirm_password']
 
+        # Validation de l'adresse e-mail
         if not re.match(r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$', email):
             flash('Adresse e-mail invalide.', 'error')
             return redirect(url_for('register'))
-
+        
+        # Validation des mots de passe
         if password != confirm_password:
             flash('Les mots de passe ne correspondent pas.', 'error')
             return redirect(url_for('register'))
 
+        # Hachage du mot de passe
         hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
         registration_key = str(uuid.uuid4())  # Générer une clé d'enregistrement unique
-
+        
         try:
             cnx = get_db_connection()
             cur = cnx.cursor()
-            # Ajouter registration_key dans l'insertion
-            cur.execute("INSERT INTO users (firstname, secondname, email, password, registration_key) VALUES (%s, %s, %s, %s, %s)",
-                        (firstname, secondname, email, hashed_password, registration_key))
+
+            # Insertion de l'utilisateur dans la base de données
+            cur.execute("""
+                INSERT INTO users (firstname, secondname, email, password, registration_key) 
+                VALUES (%s, %s, %s, %s, %s)
+            """, (firstname, secondname, email, hashed_password, registration_key))
             cnx.commit()
-            flash('Inscription réussie ! Vous pouvez maintenant vous connecter.', 'success')
+
+            # Préparer l'e-mail de validation
+            validation_link = f'https://jo-2024-7880c127844d.herokuapp.com/{registration_key}'
+            send_validation_email(email, validation_link)
+
+            flash('Inscription réussie ! Un e-mail de validation a été envoyé.', 'success')
         except mysql.connector.Error as err:
             app.logger.error(f"Erreur lors de l'inscription: {err}")
             flash('Une erreur est survenue lors de l\'inscription. Veuillez réessayer.', 'error')
@@ -278,6 +290,58 @@ def register():
         return redirect(url_for('login'))
     
     return render_template('register.html')
+
+
+def send_validation_email(to_email, validation_link):
+    # Préparer l'envoi de l'e-mail via l'API Mailgun
+    response = requests.post(
+        f'https://api.mailgun.net/v3/{os.getenv("MAILGUN_DOMAIN")}/messages',
+        auth=('api', os.getenv('MAILGUN_API_KEY')),  # Assurez-vous que la clé API est stockée ici
+        data={
+            'from': os.getenv('MAILGUN_USERNAME'),
+            'to': to_email,
+            'subject': 'Validation de votre inscription',
+            'text': f'Bienvenue ! Veuillez valider votre e-mail en cliquant sur ce lien : {validation_link}'
+        }
+    )
+    
+    # Optionnel : vérifier la réponse pour gérer les erreurs
+    if response.status_code != 200:
+        app.logger.error(f"Erreur lors de l'envoi de l'e-mail : {response.text}")
+    else:
+        app.logger.info("E-mail de validation envoyé avec succès.")
+
+@app.route('/validate', methods=['GET'])
+def validate():
+    registration_key = request.args.get('key')
+
+    try:
+        cnx = get_db_connection()
+        cur = cnx.cursor()
+        
+        # Vérifier si la clé d'enregistrement existe dans la base de données
+        cur.execute("SELECT * FROM users WHERE registration_key = %s", (registration_key,))
+        user = cur.fetchone()
+
+        if user:
+            # Optionnel : Activer le compte ou mettre à jour le statut
+            # cur.execute("UPDATE users SET is_active = 1 WHERE registration_key = %s", (registration_key,))
+            # cnx.commit()
+
+            flash('Votre e-mail a été validé avec succès. Vous pouvez maintenant vous connecter.', 'success')
+        else:
+            flash('Clé de validation invalide ou expirée.', 'error')
+
+    except mysql.connector.Error as err:
+        app.logger.error(f"Erreur lors de la validation : {err}")
+        flash('Une erreur est survenue lors de la validation. Veuillez réessayer.', 'error')
+    
+    finally:
+        cur.close()
+        cnx.close()
+
+    # Rediriger vers la page de connexion
+    return redirect(url_for('login'))
 
 @app.route('/logout')
 def logout():
