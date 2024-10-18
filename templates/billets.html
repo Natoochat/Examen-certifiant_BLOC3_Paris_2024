@@ -6,6 +6,9 @@
     <h2>{{ billet[1] }}</h2>
     <p>Prix : {{ billet[2] }} €</p>
     <p>Disponibles : {{ billet[3] }}</p>
+    <p>Date : {{ billet[4] }}</p>
+    <p>Lieu : {{ billet[5] }}</p>
+    <p>Heure : {{ billet[6] }}</p>
 
     {% if billet[3] > 0 %}
     <form
@@ -21,10 +24,10 @@
             name="quantite"
             value="{{ quantite }}"
           />
-          <label for="{{ quantite }}_{{ billet[0] }}"
-            >{{ quantite == 1 and "Solo" or (quantite == 2 and "Duo" or
-            "Famille") }} ({{ quantite }})</label
-          >
+          <label for="{{ quantite }}_{{ billet[0] }}">
+            {{ quantite == 1 and "Solo" or (quantite == 2 and "Duo" or
+            "Famille") }} ({{ quantite }})
+          </label>
         </div>
         {% endfor %}
       </div>

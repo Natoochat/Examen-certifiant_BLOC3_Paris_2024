@@ -4,9 +4,7 @@ from io import BytesIO
 import base64
 import os
 import mysql.connector
-from mysql.connector import Error
 import re
-import requests
 import uuid
 import qrcode
 import logging
@@ -21,26 +19,40 @@ bcrypt = Bcrypt(app)
 # Fonction de connexion à la base de données
 def get_db_connection():
     try:
-        required_env_vars = ['DB_USER', 'DB_PASSWORD', 'DB_HOST', 'DB_PORT', 'DB_DATABASE', 'DB_SSL_CA']
-        for var in required_env_vars:
-            if os.getenv(var) is None:
-                app.logger.error(f"La variable d'environnement {var} n'est pas définie.")
-                return None
+        db_user = os.getenv('STACKHERO_MYSQL_ROOT_USER', os.getenv('DB_USER'))
+        db_password = os.getenv('STACKHERO_MYSQL_ROOT_PASSWORD', os.getenv('DB_PASSWORD'))
+        db_host = os.getenv('STACKHERO_MYSQL_HOST', os.getenv('DB_HOST'))
+        db_port = os.getenv('STACKHERO_MYSQL_PORT', os.getenv('DB_PORT'))
+        db_database = os.getenv('DB_DATABASE', 'billetterie')
+
+        if not all([db_user, db_password, db_host, db_port, db_database]):
+            missing_vars = [var for var, val in {
+                'USER': db_user,
+                'PASSWORD': db_password,
+                'HOST': db_host,
+                'PORT': db_port,
+                'DATABASE': db_database,
+            }.items() if not val]
+            app.logger.error(f"Les variables d'environnement suivantes sont manquantes : {', '.join(missing_vars)}.")
+            return None
         
         config = {
-            'user': os.getenv('DB_USER'),
-            'password': os.getenv('DB_PASSWORD'),
-            'host': os.getenv('DB_HOST'),
-            'port': os.getenv('DB_PORT'),
-            'database': os.getenv('DB_DATABASE'),
-            'ssl_ca': os.getenv('DB_SSL_CA')
+            'user': db_user,
+            'password': db_password,
+            'host': db_host,
+            'port': db_port,
+            'database': db_database,
+            'ssl_ca': os.getenv('DB_SSL_CA'),  # Chemin vers le certificat CA
+            'ssl_disabled': False,  # Assurez-vous que SSL est activé
         }
-        
+
         app.logger.info("Tentative de connexion à la base de données avec SSL...")
-        return mysql.connector.connect(**config)
+        connection = mysql.connector.connect(**config)
+        app.logger.info("Connexion à la base de données réussie.")
+        return connection
     
     except mysql.connector.Error as err:
-        app.logger.error(f"Erreur de connexion à la base de données: {err}")
+        app.logger.error(f"Erreur de connexion à la base de données : {err}")
         return None
 
 @app.route('/')
@@ -65,7 +77,8 @@ def billets():
 
     try:
         with cnx.cursor() as cur:
-            cur.execute("SELECT * FROM billets LIMIT %s OFFSET %s", (per_page, offset))
+            # Mise à jour de la requête pour inclure les nouvelles colonnes
+            cur.execute("SELECT id, nom, prix, disponible, date, lieu, heure FROM billets LIMIT %s OFFSET %s", (per_page, offset))
             billets = cur.fetchall()
     except mysql.connector.Error as err:
         app.logger.error(f"Erreur lors de l'exécution de la requête: {err}")
@@ -74,6 +87,7 @@ def billets():
     finally:
         cnx.close()
 
+    # Passer les billets récupérés au template
     return render_template('billets.html', billets=billets, page=page, per_page=per_page)
 
 @app.route('/ajouter_au_panier/<int:id>', methods=['POST'])
