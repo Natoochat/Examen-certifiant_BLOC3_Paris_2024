@@ -23,7 +23,7 @@ bcrypt = Bcrypt(app)
 def get_db_connection():
     try:
         if 'DATABASE_URL' in os.environ:
-            url = urlparse.urlparse(os.environ['DATABASE_URL'])
+            url = urlparse(os.environ['DATABASE_URL'])
 
             config = {
                 'user': url.username,
