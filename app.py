@@ -50,7 +50,7 @@ def get_db_connection():
             'host': db_host,
             'port': db_port,
             'database': db_database,
-            'ssl_disabled': False,  # Assurez-vous que SSL est activé
+            'ssl_disabled': True,  # Assurez-vous que SSL est activé
         }
 
         # Ajout du certificat CA si disponible
