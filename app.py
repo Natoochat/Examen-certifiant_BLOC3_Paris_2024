@@ -25,7 +25,9 @@ def get_db_connection():
         db_host = os.getenv('STACKHERO_MYSQL_HOST', os.getenv('DB_HOST'))
         db_port = os.getenv('STACKHERO_MYSQL_PORT', os.getenv('DB_PORT'))
         db_database = os.getenv('DB_DATABASE', 'billetterie')
+        db_ssl_ca = os.getenv('DB_SSL_CA')  # Chemin vers le certificat CA
 
+        # Vérification des variables d'environnement
         if not all([db_user, db_password, db_host, db_port, db_database]):
             missing_vars = [var for var, val in {
                 'USER': db_user,
@@ -37,15 +39,19 @@ def get_db_connection():
             app.logger.error(f"Les variables d'environnement suivantes sont manquantes : {', '.join(missing_vars)}.")
             return None
 
+        # Configuration de la connexion
         config = {
             'user': db_user,
             'password': db_password,
             'host': db_host,
             'port': db_port,
             'database': db_database,
-            'ssl_ca': os.getenv('DB_SSL_CA'),  # Chemin vers le certificat CA
             'ssl_disabled': False,  # Assurez-vous que SSL est activé
         }
+
+        # Ajout du certificat CA si disponible
+        if db_ssl_ca:
+            config['ssl_ca'] = db_ssl_ca
 
         app.logger.info("Tentative de connexion à la base de données avec SSL...")
         connection = mysql.connector.connect(**config)
