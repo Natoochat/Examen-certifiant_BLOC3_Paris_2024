@@ -18,6 +18,10 @@ app.logger.setLevel(logging.INFO)
 bcrypt = Bcrypt(app)
 
 # Fonction de connexion à la base de données
+import os
+import mysql.connector
+from mysql.connector import errorcode
+
 def get_db_connection():
     try:
         db_user = os.getenv('STACKHERO_MYSQL_ROOT_USER', os.getenv('DB_USER'))
@@ -51,7 +55,11 @@ def get_db_connection():
 
         # Ajout du certificat CA si disponible
         if db_ssl_ca:
-            config['ssl_ca'] = db_ssl_ca
+            if os.path.exists(db_ssl_ca):
+                config['ssl_ca'] = db_ssl_ca
+            else:
+                app.logger.error(f"Le fichier de certificat CA n'a pas été trouvé : {db_ssl_ca}.")
+                return None
 
         app.logger.info("Tentative de connexion à la base de données avec SSL...")
         connection = mysql.connector.connect(**config)
@@ -66,6 +74,7 @@ def get_db_connection():
         else:
             app.logger.error(f"Erreur de connexion à la base de données : {err}")
         return None
+
 
 @app.route('/')
 def index():
