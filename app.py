@@ -11,7 +11,7 @@ import uuid
 import qrcode
 import logging
 from dotenv import load_dotenv
-from url_parser import urlparse
+from urllib.parse import urlparse
 
 load_dotenv()
 app = Flask(__name__, static_url_path='/static')
