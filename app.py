@@ -23,13 +23,14 @@ import mysql.connector
 from mysql.connector import errorcode
 
 def get_db_connection():
+    connection = None  # Initialisation de la variable connection
     try:
         db_user = os.getenv('STACKHERO_MYSQL_ROOT_USER', os.getenv('DB_USER'))
         db_password = os.getenv('STACKHERO_MYSQL_ROOT_PASSWORD', os.getenv('DB_PASSWORD'))
         db_host = os.getenv('STACKHERO_MYSQL_HOST', os.getenv('DB_HOST'))
         db_port = os.getenv('STACKHERO_MYSQL_PORT', os.getenv('DB_PORT'))
         db_database = os.getenv('DB_DATABASE', 'billetterie')
-        db_ssl_ca = os.getenv('DB_SSL_CA')  # Chemin vers le certificat CA
+        db_ssl_ca = os.getenv('DB_SSL_CA', 'isrgrootx1.pem')  # Assure-toi que la variable d'environnement est correcte
 
         # Vérification des variables d'environnement
         if not all([db_user, db_password, db_host, db_port, db_database]):
@@ -50,16 +51,9 @@ def get_db_connection():
             'host': db_host,
             'port': db_port,
             'database': db_database,
-            'ssl_disabled': True,  # Assurez-vous que SSL est activé
+            'ssl_ca': db_ssl_ca,  # Correction ici pour utiliser le bon certificat CA
+            'ssl_disabled': False,  # SSL activé
         }
-
-        # Ajout du certificat CA si disponible
-        if db_ssl_ca:
-            if os.path.exists(db_ssl_ca):
-                config['ssl_ca'] = db_ssl_ca
-            else:
-                app.logger.error(f"Le fichier de certificat CA n'a pas été trouvé : {db_ssl_ca}.")
-                return None
 
         app.logger.info("Tentative de connexion à la base de données avec SSL...")
         connection = mysql.connector.connect(**config)
@@ -74,6 +68,7 @@ def get_db_connection():
         else:
             app.logger.error(f"Erreur de connexion à la base de données : {err}")
         return None
+
 
 
 
