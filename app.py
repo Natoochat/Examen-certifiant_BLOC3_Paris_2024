@@ -76,6 +76,7 @@ def get_db_connection():
         return None
 
 
+
 @app.route('/')
 def index():
     app.logger.info('Page d\'accueil visitée')
