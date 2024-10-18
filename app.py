@@ -349,5 +349,34 @@ def logout():
     flash('Vous avez été déconnecté.', 'success')
     return redirect(url_for('index'))
 
+@app.route('/mes_achats')
+def mes_achats():
+    if 'user_id' not in session:
+        flash('Veuillez vous connecter pour accéder à vos achats.', 'error')
+        return redirect(url_for('login'))
+
+    user_id = session['user_id']
+    achats = []
+
+    try:
+        cnx = get_db_connection()
+        cur = cnx.cursor()
+        # Récupérer les achats de l'utilisateur
+        cur.execute("""
+            SELECT a.achat_key, b.nom, a.quantite, a.date_achat 
+            FROM achats a
+            JOIN billets b ON a.billet_id = b.id
+            WHERE a.user_id = %s
+        """, (user_id,))
+        achats = cur.fetchall()
+    except mysql.connector.Error as err:
+        app.logger.error(f"Erreur lors de la récupération des achats : {err}")
+        flash('Une erreur est survenue lors de la récupération de vos achats.', 'error')
+    finally:
+        cur.close()
+        cnx.close()
+
+    return render_template('mes_achats.html', achats=achats)
+
 if __name__ == '__main__':
     app.run(debug=True)

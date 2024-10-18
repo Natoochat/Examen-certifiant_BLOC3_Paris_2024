@@ -1,31 +1,30 @@
-# Examen-certifiant_BLOC3_Paris_2024# Système de Réservation de Billets - Jeux Olympiques
+# Billetterie - Application de Réservation de Billets
 
 ## Description
 
-Ce projet est une application web de réservation de billets pour les Jeux Olympiques. Il permet aux utilisateurs de consulter les offres, d'ajouter des billets à leur panier, de gérer leur compte, et de finaliser leurs achats.
+Cette application est un système de réservation de billets pour les Jeux Olympiques de Paris 2024. Les utilisateurs peuvent s'inscrire, se connecter, acheter des billets et les télécharger sous forme de QR codes. L'application utilise Flask comme framework web, MySQL pour la base de données et Mailgun pour l'envoi d'emails de validation.
 
 ## Fonctionnalités
 
-- Gestion des offres : Les administrateurs peuvent gérer les différentes offres proposées aux clients.
-- Gestion du panier : Les utilisateurs peuvent ajouter et supprimer des billets dans leur panier.
-- Authentification : Les utilisateurs peuvent créer un compte et se connecter.
-- Paiement : Les utilisateurs peuvent finaliser leurs achats et recevoir un e-billet sous forme de QR code.
-- Page d'accueil : Présentation des Jeux Olympiques et des épreuves.
-- Rapports et analyses : Les administrateurs peuvent générer des rapports sur les ventes de billets.
+- **Inscription et connexion des utilisateurs**
+- **Validation par email** avec un lien de confirmation
+- **Visualisation et achat de billets**
+- **Panier d'achat** pour gérer les billets sélectionnés
+- **Génération de QR codes** pour les achats réussis
+- **Historique des achats**
 
 ## Prérequis
 
-Avant de commencer, assurez-vous d'avoir installé les éléments suivants :
+Avant de commencer, assurez-vous d'avoir les éléments suivants installés sur votre machine :
 
-- [Python](https://www.python.org/downloads/) 3.x
-- [MySQL](https://www.mysql.com/downloads/)
-- [pip](https://pip.pypa.io/en/stable/) pour gérer les dépendances
-- [Mailgun](https://www.mailgun.com/) pour l'envoi d'e-mails
+- Python 3.x
+- Pip (gestionnaire de paquets Python)
+- MySQL
 
 ## Installation
 
-1. Clonez le dépôt :
+1. **Clonez le dépôt :**
 
    ```bash
-   git clone https://github.com/Natoochat/Examen-certifiant_BLOC3_Paris_2024/blob/main/README.md
-   cd votre-repo
+   git clone https://github.com/votre-utilisateur/billetterie.git
+   cd billetterie

@@ -1,0 +1,30 @@
+{% extends "layout.html" %} {% block content %}
+<body>
+  <h1>Mes Achats</h1>
+  {% with messages = get_flashed_messages(with_categories=true) %} {% if
+  messages %} {% for category, message in messages %}
+  <div class="alert alert-{{ category }}">{{ message }}</div>
+  {% endfor %} {% endif %} {% endwith %}
+
+  <table>
+    <thead>
+      <tr>
+        <th>Achat Key</th>
+        <th>Nom du Billet</th>
+        <th>Quantité</th>
+        <th>Date d'Achat</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for achat in achats %}
+      <tr>
+        <td>{{ achat[0] }}</td>
+        <td>{{ achat[1] }}</td>
+        <td>{{ achat[2] }}</td>
+        <td>{{ achat[3] }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+{% endblock %}
