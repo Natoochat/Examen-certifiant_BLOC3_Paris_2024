@@ -9,7 +9,7 @@ import uuid
 import qrcode
 import logging
 from dotenv import load_dotenv
-from urllib.parse import urlparse
+from mysql.connector import errorcode
 
 load_dotenv()
 app = Flask(__name__, static_url_path='/static')
@@ -36,7 +36,7 @@ def get_db_connection():
             }.items() if not val]
             app.logger.error(f"Les variables d'environnement suivantes sont manquantes : {', '.join(missing_vars)}.")
             return None
-        
+
         config = {
             'user': db_user,
             'password': db_password,
@@ -51,9 +51,14 @@ def get_db_connection():
         connection = mysql.connector.connect(**config)
         app.logger.info("Connexion à la base de données réussie.")
         return connection
-    
+
     except mysql.connector.Error as err:
-        app.logger.error(f"Erreur de connexion à la base de données : {err}")
+        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+            app.logger.error("Le nom d'utilisateur ou le mot de passe est incorrect.")
+        elif err.errno == errorcode.ER_BAD_DB_ERROR:
+            app.logger.error("La base de données n'existe pas.")
+        else:
+            app.logger.error(f"Erreur de connexion à la base de données : {err}")
         return None
 
 @app.route('/')
