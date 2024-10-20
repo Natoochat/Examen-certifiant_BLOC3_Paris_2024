@@ -31,7 +31,7 @@ def get_db_connection():
         db_host = os.getenv('STACKHERO_MYSQL_HOST', os.getenv('DB_HOST'))
         db_port = os.getenv('STACKHERO_MYSQL_PORT', os.getenv('DB_PORT'))
         db_database = os.getenv('DB_DATABASE', 'billetterie')
-        db_ssl_ca = os.getenv(os.getenv('DB_SSL_CA'))  # Assure-toi que la variable d'environnement est correcte
+        db_ssl_ca = os.getenv('DB_CA_CERT',os.getenv('DB_SSL_CA'))  # Assure-toi que la variable d'environnement est correcte
 
         # Vérification des variables d'environnement
         if not all([db_user, db_password, db_host, db_port, db_database]):
