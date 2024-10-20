@@ -254,6 +254,15 @@ def paiement():
             cnx = get_db_connection()
             cur = cnx.cursor()
 
+            # Récupérer la clé d'enregistrement de l'utilisateur
+            cur.execute("SELECT registration_key FROM users WHERE id = %s", (session['user_id'],))
+            registration_key = cur.fetchone()
+            if registration_key:
+                registration_key = registration_key[0]
+            else:
+                flash('Erreur lors de la récupération de la clé d\'enregistrement.', 'error')
+                return redirect(url_for('panier'))
+
             for item in session['panier']:
                 id_billet = item['id']
                 quantite = item['quantite']
@@ -275,13 +284,13 @@ def paiement():
             cnx.commit()
 
             # Génération du QR Code
-            qr_data = f"Achat clé: {achat_key}, Total payé: {total_payer}"
+            qr_data = f"Achat clé: {achat_key}, Clé d'enregistrement: {registration_key}, Total payé: {total_payer}"
             qr = qrcode.make(qr_data)
-            
+
             img_byte_arr = BytesIO()
             qr.save(img_byte_arr, format='PNG')
             img_byte_arr.seek(0)
-            
+
             img_base64 = base64.b64encode(img_byte_arr.getvalue()).decode('utf-8')
             img_str = f"data:image/png;base64,{img_base64}"
 
