@@ -4,9 +4,19 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{% block title %}Site de vente de billets{% endblock %}</title>
-    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/reset.css') }}" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="{{ url_for('static', filename='img/favicon.ico') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/reset.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/styles.css') }}"
+    />
   </head>
   <body>
     <header>
@@ -14,6 +24,7 @@
         <ul class="nav_list">
           <li class="nav_img">
             <img
+              class="mascotte-logo"
               src="../static/img/mascotte-jo.png"
               alt="Mascotte des JO sur la tour eiffel"
             />
@@ -24,6 +35,10 @@
           </li>
           {% if 'user_id' in session %}
           <li class="nav_item"><a href="{{ url_for('panier') }}">Panier</a></li>
+          <li class="nav_item">
+            <a href="{{ url_for('mes_achats') }}">Mes Achats</a>
+          </li>
+          <!-- Lien vers Mes Achats -->
           <li class="nav_item">
             <a href="{{ url_for('logout') }}">Déconnexion</a>
           </li>

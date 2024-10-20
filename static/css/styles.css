@@ -23,61 +23,66 @@ header {
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  height: 100%;
-  justify-content: space-between;
+  justify-content: center;
   padding: 2.4rem 1.6rem;
   width: 100%;
-  margin: 20px;
+}
+
+.nav_img{
+  box-sizing: border-box;
+  line-height: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.mascotte-logo {
+  max-width: 50%; /* Ajuste la largeur maximale selon tes besoins */
+  height: auto; /* Garde le rapport d'aspect */
+  margin-bottom: 1rem; /* Espace entre le logo et la navigation */
+  margin-right: 0;
+  padding-left: 0;
 }
 
 .navbar {
-  align-items: flex-start;
-  box-sizing: border-box;
+  align-items: flex-start; /* Aligne à gauche */
   display: flex;
-  justify-content: space-between;
+  flex-direction: column; /* Aligner en colonne pour le responsive */
   width: 100%;
 }
 
 .nav_list {
   align-items: center;
   display: flex;
+  flex-wrap: wrap; /* Permet de passer à la ligne si l'écran est trop petit */
   gap: 0.8rem;
-  justify-content: center;
-  width: calc(33.3333%);
+  justify-content: flex-start; /* Aligne les éléments à gauche */
+  width: 100%; /* Prendre toute la largeur disponible */
+  margin: 0; /* Enlève la marge pour être plus à gauche */
 }
 
 .nav_item {
   display: flex;
-  gap: 0.8rem;
   align-items: center;
   background-color: var(--primary-color);
-  border: none; /* Corrigé de medium à none */
+  border: none;
   border-radius: 5.8rem;
   box-sizing: border-box;
   cursor: pointer;
   font-weight: 700;
   height: 4rem;
-  justify-content: center;
   padding: 0 1.6rem;
   text-transform: uppercase;
   white-space: nowrap;
   z-index: 1;
-  transition: all 0.3s ease-in-out; /* Ajouté ici pour uniformité */
-}
-
-.nav_img {
-  align-items: center;
-  display: flex;
-  gap: 0.8rem;
-  justify-content: center;
-  width: calc(33.3333%);
-  pointer-events: none;
-  position: relative;
+  transition: all 0.3s ease-in-out;
 }
 
 .hero {
   background-image: url('../img/image_hero.jpg');
   background-size: cover;
+  background-position: center; /* Centre l'image */
   text-align: center;
   color: black;
   font-weight: 700;
@@ -86,7 +91,7 @@ header {
 
 .hero h1 {
   font-size: 3rem;
-  margin: 20px; /* Corrigé de 20 px à 20px */
+  margin: 20px; 
   padding: 10px;
 }
 
@@ -99,66 +104,8 @@ main {
 img {
   margin: 0;
   padding: 0;
-  width: 100%; /* Changement pour être réactif */
+  width: 50%; /* Réduit la largeur à 50% */
   height: auto; /* Pour garder le rapport d'aspect */
-}
-
-.btn {
-  display: inline-block;
-  background-color: var(--vert);
-  color: white;
-  padding: 0.5rem 1rem;
-  text-decoration: none;
-  border-radius: 5px;
-  transition: background-color 0.3s;
-}
-
-.btn:hover {
-  background-color: var(--jaune);
-  color: var(--noir);
-}
-
-.billets {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
-}
-
-.billets li {
-  background-color: white;
-  border-radius: 10px;
-  padding: 1rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s;
-}
-
-.billets li:hover {
-  transform: translateY(-5px);
-}
-
-.billets h2 {
-  color: var(--bleu);
-}
-
-.epuise {
-  color: var(--rouge);
-  font-weight: bold;
-}
-
-.flash-success {
-  background-color: var(--vert);
-  color: white;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  border-radius: 5px;
-}
-
-.flash-error {
-  background-color: var(--rouge);
-  color: white;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  border-radius: 5px;
 }
 
 footer {
@@ -169,57 +116,16 @@ footer {
   margin-top: 2rem;
 }
 
-/* Styles spécifiques pour la sélection des billets */
-.radio-container {
-  display: flex;
-  flex-direction: column; /* Aligne les éléments verticalement */
-}
-
-.radio-group {
-  display: flex;
-  align-items: center; /* Centre verticalement le contenu */
-  margin-bottom: 10px; /* Espace entre chaque groupe */
-}
-
-.radio-group input[type="radio"] {
-  margin-right: 5px; /* Espace entre le radio button et le label */
-}
-
-/* Styles spécifiques pour le panier */
-.panier {
-  list-style-type: none;
-  padding: 0;
-}
-
-.panier li {
-  background-color: white;
-  border-radius: 10px;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.nav_item:hover {
-  transform: scale(1.1);
-  background-color: var(--secondary-color);
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-}
-
 /* Responsive design */
 @media (max-width: 768px) {
-  .navbar {
-    flex-direction: column; /* Corrigé pour que le nav soit aussi en colonne */
-    align-items: center; /* Centrer les éléments */
-  }
-
   .nav_list {
-    width: 100%; /* Corrigé pour que la liste prenne toute la largeur */
-    justify-content: center; /* Centrer les éléments de la liste */
+    width: 100%; /* Prendre toute la largeur sur petits écrans */
+    justify-content: flex-start; /* Aligner à gauche */
   }
 
   .nav_item {
     margin: 0.5rem 0; /* Ajouté ici pour le responsive */
-    width: 100%; /* Rendre chaque item de navigation plein écran */
+    width: auto; /* Les items prennent leur largeur minimum */
     text-align: center; /* Centrer le texte dans les éléments */
   }
 
@@ -229,15 +135,6 @@ footer {
 
   .hero h1 {
     font-size: 2.5rem; /* Réduire la taille de police sur les petits écrans */
-  }
-
-  .billets {
-    grid-template-columns: 1fr; /* Un seul colonne sur les petits écrans */
-  }
-
-  img {
-    width: 100%; /* Assure que les images prennent toute la largeur disponible */
-    height: auto; /* Assure que les images gardent le rapport d'aspect */
   }
 }
 

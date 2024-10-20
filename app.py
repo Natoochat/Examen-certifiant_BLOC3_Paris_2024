@@ -123,10 +123,10 @@ def ajouter_au_panier(id):
     try:
         cnx = get_db_connection()
         cur = cnx.cursor()
-        cur.execute("SELECT id, nom, prix FROM billets WHERE id = %s", (id,))
+        cur.execute("SELECT id, nom, prix FROM billets WHERE id = %s and disponible >= %s", (id,quantite)) #ajout de la vérifiaction de quantité disponible
         billet = cur.fetchone()
         if not billet:
-            flash('Billet introuvable.', 'error')
+            flash('Aucun billet disponible', 'error')
             return redirect(url_for('billets'))
         
         if 'panier' not in session:
@@ -167,6 +167,52 @@ def supprimer_du_panier(id):
         flash('Article supprimé du panier.', 'success')
     return redirect(url_for('panier'))
 
+def luhn_check(card_number):
+    """Vérifie si le numéro de carte est valide selon l'algorithme de Luhn."""
+    total = 0
+    reverse_digits = card_number[::-1]
+    for i, digit in enumerate(reverse_digits):
+        n = int(digit)
+        if i % 2 == 1:  # Double le chiffre tous les deux
+            n *= 2
+            if n > 9:  # Soustraire 9 si le résultat est supérieur à 9
+                n -= 9
+        total += n
+    return total % 10 == 0
+
+def simulate_payment(card_number, total):
+    # Vérifier si card_number est None ou non valide
+    if card_number is None or not card_number.isdigit() or len(card_number) != 16:
+        return False  # La carte est invalide
+
+    # Vérifier avec l'algorithme de Luhn
+    if not luhn_check(card_number):
+        return False  # La carte échoue à la vérification de Luhn
+
+    # Simuler un traitement de paiement
+    if card_number == "4111111111111111":  # Numéro de carte valide pour les paiements < 100
+        return True
+    elif card_number == "1234567890123456":  # Numéro de carte invalide
+        return False
+
+    return False  # Pour d'autres numéros, tu peux choisir de simuler un succès ou un échec
+
+def is_valid_expiration_date(expiration_date):
+    from datetime import datetime
+    
+    # Vérifier le format MM/AA
+    try:
+        month, year = map(int, expiration_date.split('/'))
+        # Vérifier que le mois est entre 1 et 12
+        if month < 1 or month > 12:
+            return False
+        # Vérifier si la date d'expiration est dans le futur
+        current_year = datetime.now().year % 100  # Obtenir l'année actuelle sur 2 chiffres
+        current_month = datetime.now().month
+        return (year > current_year) or (year == current_year and month >= current_month)
+    except (ValueError, IndexError):
+        return False
+
 @app.route('/paiement', methods=['GET', 'POST'])
 def paiement():
     if 'user_id' not in session:
@@ -174,18 +220,74 @@ def paiement():
         return redirect(url_for('login'))
 
     if request.method == 'POST':
+        # Récupérer les informations de paiement
+        card_number = request.form.get('card_number')
+        expiration_date = request.form.get('expiration')
+        cvv = request.form.get('cvv')
+
+        # Vérification si le numéro de carte n'est pas None et s'il est valide
+        if not card_number or not card_number.isdigit() or len(card_number) != 16:
+            flash('Numéro de carte invalide.', 'error')
+            return redirect(url_for('paiement'))
+
+        # Vérification de la validité du numéro de carte via l'algorithme de Luhn
+        if not luhn_check(card_number):
+            flash('Numéro de carte invalide (algorithme de Luhn).', 'error')
+            return redirect(url_for('paiement'))
+
+        # Vérification si le CVV n'est pas None et s'il est valide
+        if not cvv or not cvv.isdigit() or len(cvv) not in [3, 4]:
+            flash('Code de sécurité (CVV) invalide.', 'error')
+            return redirect(url_for('paiement'))
+
+        # Validation de la date d'expiration
+        if not is_valid_expiration_date(expiration_date):
+            flash('Date d\'expiration invalide.', 'error')
+            return redirect(url_for('paiement'))
+
         achat_key = str(uuid.uuid4())
+        total_payer = 0
+
         try:
             cnx = get_db_connection()
             cur = cnx.cursor()
+
+            # Vérification des quantités disponibles
+            quantites_disponibles = {}
+            for item in session['panier']:
+                cur.execute("SELECT disponible FROM billets WHERE id = %s", (item['id'],))
+                result = cur.fetchone()
+
+                if result is None:
+                    flash(f'Billet avec ID {item["id"]} introuvable.', 'error')
+                    return redirect(url_for('panier'))
+
+                quantites_disponibles[item['id']] = result[0]
+
+            # Vérifie si les quantités demandées sont disponibles
+            for item in session['panier']:
+                if quantites_disponibles[item['id']] < item['quantite']:
+                    flash(f'Quantité insuffisante pour le billet {item["nom"]}. Disponible : {quantites_disponibles[item["id"]]}.', 'error')
+                    return redirect(url_for('panier'))
+
+                total_payer += float(item['prix']) * int(item['quantite'])
+
+            # Simuler le traitement du paiement (remplace par une vraie API de paiement dans un vrai projet)
+            if not simulate_payment(card_number, total_payer):
+                flash('Le paiement a échoué. Veuillez vérifier vos informations de carte.', 'error')
+                return redirect(url_for('paiement'))
+
+            # Mise à jour des billets et insertion des achats si toutes les vérifications passent
             for item in session['panier']:
                 cur.execute("UPDATE billets SET disponible = disponible - %s WHERE id = %s",
                             (item['quantite'], item['id']))
                 cur.execute("INSERT INTO achats (billet_id, user_id, quantite, achat_key) VALUES (%s, %s, %s, %s)",
                             (item['id'], session['user_id'], item['quantite'], achat_key))
+
             cnx.commit()
             session.pop('panier', None)
 
+            # Générer le QR code
             qr = qrcode.QRCode(version=1, box_size=10, border=5)
             qr.add_data(f"Achat: {achat_key}")
             qr.make(fit=True)
@@ -205,7 +307,10 @@ def paiement():
         finally:
             cur.close()
             cnx.close()
+
     return render_template('paiement.html')
+
+
 
 @app.route('/download_qr/<achat_key>')
 def download_qr(achat_key):
@@ -228,12 +333,12 @@ def login():
         
         cnx = get_db_connection()
         cur = cnx.cursor()
-        cur.execute("SELECT * FROM users WHERE email = %s", (email,))
+        cur.execute("SELECT id, password FROM users WHERE email = %s", (email,))
         user = cur.fetchone()
         cur.close()
         cnx.close()
         
-        if user and bcrypt.check_password_hash(user[4], password):
+        if user and bcrypt.check_password_hash(user[1], password):
             session['user_id'] = user[0]
             flash('Connexion réussie !', 'success')
             return redirect(url_for('index'))
