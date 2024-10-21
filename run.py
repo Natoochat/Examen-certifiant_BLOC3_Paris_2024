@@ -461,7 +461,7 @@ def admin():
     # Récupération des billets pour l'affichage dans l'admin
     cnx = get_db_connection()
     cur = cnx.cursor()
-    cur.execute("SELECT id, nom, prix, disponible FROM billets")
+    cur.execute("SELECT id, nom, prix, disponible, date, lieu, heure FROM billets")
     billets = cur.fetchall()
     cur.close()
     cnx.close()
