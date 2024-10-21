@@ -444,7 +444,7 @@ def login():
             
             # Redirection vers la page admin si l'utilisateur est un admin
             if user[2] == 'admin':
-                return redirect(url_for('admin'))
+                return redirect(url_for('index'))
             
             flash('Connexion réussie !', 'success')
             return redirect(url_for('index'))
