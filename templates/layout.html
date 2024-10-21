@@ -39,7 +39,14 @@
           <li class="nav_item">
             <a href="{{ url_for('logout') }}">Déconnexion</a>
           </li>
-          {% else %}
+          {% if session.get('role') == 'admin' %}
+          <li class="nav_item">
+            <a href="{{ url_for('admin') }}">Tableau de bord admin</a>
+          </li>
+          <li class="nav_item">
+            <a href="{{ url_for('add_billet') }}">Ajouter un billet</a>
+          </li>
+          {% endif %} {% else %}
           <li class="nav_item">
             <a href="{{ url_for('login') }}">Connexion</a>
           </li>

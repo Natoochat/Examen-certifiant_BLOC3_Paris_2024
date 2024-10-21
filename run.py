@@ -352,6 +352,38 @@ def edit_billet(id):
 
     return render_template('edit_billet.html', billet=billet)
 
+@app.route('/add_billet', methods=['GET', 'POST'])
+def add_billet():
+    cnx = get_db_connection()
+    cur = cnx.cursor()
+
+    if request.method == 'POST':
+        nom = request.form.get('nom')
+        prix = request.form.get('prix', type=float)
+        disponible = request.form.get('disponible', type=int)
+        date = request.form.get('date')
+        lieu = request.form.get('lieu')
+        heure = request.form.get('heure')
+
+        try:
+            # Insertion d'un nouveau billet
+            cur.execute("""
+                INSERT INTO billets (nom, prix, disponible, date, lieu, heure) 
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (nom, prix, disponible, date, lieu, heure))
+            cnx.commit()
+
+            flash('Billet ajouté avec succès!', 'success')
+            return redirect(url_for('admin'))  # Redirige vers la liste des billets
+        except mysql.connector.Error as err:
+            flash('Erreur lors de l\'ajout du billet.', 'error')
+            app.logger.error(f"Erreur d'ajout : {err}")
+
+    cur.close()
+    cnx.close()
+
+    return render_template('add_billet.html')
+
 @app.route('/delete_billet/<int:id>', methods=['POST'])
 def delete_billet(id):
     cnx = get_db_connection()

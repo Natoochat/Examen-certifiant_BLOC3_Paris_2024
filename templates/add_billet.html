@@ -1,0 +1,40 @@
+{% extends "layout.html" %} {% block title %}Ajouter un Billet{% endblock %} {%
+block content %}
+<header>
+  <h1>Ajouter un Billet</h1>
+</header>
+<main>
+  {% with messages = get_flashed_messages(with_categories=true) %} {% if
+  messages %} {% for category, message in messages %}
+  <div class="flash-{{ category }}">{{ message }}</div>
+  {% endfor %} {% endif %} {% endwith %}
+
+  <form method="POST" action="{{ url_for('add_billet') }}">
+    <div>
+      <label for="nom">Nom:</label>
+      <input type="text" id="nom" name="nom" required />
+    </div>
+    <div>
+      <label for="prix">Prix:</label>
+      <input type="number" step="0.01" id="prix" name="prix" required />
+    </div>
+    <div>
+      <label for="disponible">Disponible:</label>
+      <input type="number" id="disponible" name="disponible" required />
+    </div>
+    <div>
+      <label for="date">Date:</label>
+      <input type="date" id="date" name="date" required />
+    </div>
+    <div>
+      <label for="lieu">Lieu:</label>
+      <input type="text" id="lieu" name="lieu" required />
+    </div>
+    <div>
+      <label for="heure">Heure:</label>
+      <input type="time" id="heure" name="heure" required />
+    </div>
+    <button type="submit">Ajouter le Billet</button>
+  </form>
+</main>
+{% endblock %}
