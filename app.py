@@ -11,6 +11,7 @@ import logging
 from dotenv import load_dotenv
 from mysql.connector import errorcode
 import requests
+import forms
 
 load_dotenv()
 app = Flask(__name__, static_url_path='/static')
@@ -19,10 +20,6 @@ app.logger.setLevel(logging.INFO)
 bcrypt = Bcrypt(app)
 
 # Fonction de connexion à la base de données
-import os
-import mysql.connector
-from mysql.connector import errorcode
-
 def get_db_connection():
     connection = None  # Initialisation de la variable connection
     try:
@@ -69,8 +66,6 @@ def get_db_connection():
         else:
             app.logger.error(f"Erreur de connexion à la base de données : {err}")
         return None
-
-
 
 
 @app.route('/')
@@ -195,7 +190,7 @@ def simulate_payment(card_number, total):
     elif card_number == "1234567890123456":  # Numéro de carte invalide
         return False
 
-    return False  # Pour d'autres numéros, tu peux choisir de simuler un succès ou un échec
+    return False
 
 def is_valid_expiration_date(expiration_date):
     from datetime import datetime
@@ -218,6 +213,8 @@ def paiement():
     if 'user_id' not in session:
         flash('Veuillez vous connecter pour effectuer un paiement.', 'error')
         return redirect(url_for('login'))
+
+    form = forms.PaymentForm()
 
     if request.method == 'POST':
         # Récupérer les informations de paiement
@@ -245,6 +242,11 @@ def paiement():
             flash('Date d\'expiration invalide.', 'error')
             return redirect(url_for('paiement'))
 
+        # Simuler le paiement (ou appeler une fonction réelle de traitement de paiement)
+        if not simulate_payment(card_number, total=0):  # Mettre à jour avec le montant réel
+            flash('Détails de paiement invalides. Veuillez réessayer.', 'error')
+            return redirect(url_for('panier'))
+
         achat_key = str(uuid.uuid4())
         total_payer = 0
 
@@ -252,65 +254,62 @@ def paiement():
             cnx = get_db_connection()
             cur = cnx.cursor()
 
-            # Vérification des quantités disponibles
-            quantites_disponibles = {}
-            for item in session['panier']:
-                cur.execute("SELECT disponible FROM billets WHERE id = %s", (item['id'],))
-                result = cur.fetchone()
+            # Récupérer la clé d'enregistrement de l'utilisateur
+            cur.execute("SELECT registration_key FROM users WHERE id = %s", (session['user_id'],))
+            registration_key = cur.fetchone()
+            if registration_key:
+                registration_key = registration_key[0]
+            else:
+                flash('Erreur lors de la récupération de la clé d\'enregistrement.', 'error')
+                return redirect(url_for('panier'))
 
-                if result is None:
-                    flash(f'Billet avec ID {item["id"]} introuvable.', 'error')
+            for item in session['panier']:
+                id_billet = item['id']
+                quantite = item['quantite']
+
+                cur.execute("SELECT disponible, prix FROM billets WHERE id = %s", (id_billet,))
+                billet = cur.fetchone()
+
+                if billet and billet[0] >= quantite:
+                    total_payer += billet[1] * quantite
+
+                    cur.execute("UPDATE billets SET disponible = disponible - %s WHERE id = %s", (quantite, id_billet))
+                    cur.execute("INSERT INTO achats (user_id, billet_id, quantite, montant, achat_key) VALUES (%s, %s, %s, %s, %s)",
+                               (session['user_id'], id_billet, quantite, billet[1] * quantite, achat_key))
+                else:
+                    flash(f'Pas assez de billets disponibles pour {item["nom"]}.', 'error')
+                    cnx.rollback()
                     return redirect(url_for('panier'))
-
-                quantites_disponibles[item['id']] = result[0]
-
-            # Vérifie si les quantités demandées sont disponibles
-            for item in session['panier']:
-                if quantites_disponibles[item['id']] < item['quantite']:
-                    flash(f'Quantité insuffisante pour le billet {item["nom"]}. Disponible : {quantites_disponibles[item["id"]]}.', 'error')
-                    return redirect(url_for('panier'))
-
-                total_payer += float(item['prix']) * int(item['quantite'])
-
-            # Simuler le traitement du paiement (remplace par une vraie API de paiement dans un vrai projet)
-            if not simulate_payment(card_number, total_payer):
-                flash('Le paiement a échoué. Veuillez vérifier vos informations de carte.', 'error')
-                return redirect(url_for('paiement'))
-
-            # Mise à jour des billets et insertion des achats si toutes les vérifications passent
-            for item in session['panier']:
-                cur.execute("UPDATE billets SET disponible = disponible - %s WHERE id = %s",
-                            (item['quantite'], item['id']))
-                cur.execute("INSERT INTO achats (billet_id, user_id, quantite, achat_key) VALUES (%s, %s, %s, %s)",
-                            (item['id'], session['user_id'], item['quantite'], achat_key))
 
             cnx.commit()
-            session.pop('panier', None)
 
-            # Générer le QR code
-            qr = qrcode.QRCode(version=1, box_size=10, border=5)
-            qr.add_data(f"Achat: {achat_key}")
-            qr.make(fit=True)
-            img = qr.make_image(fill_color="black", back_color="white")
+            # Génération du QR Code
+            qr_data = f"Achat clé: {achat_key}, Clé d'enregistrement: {registration_key}, Total payé: {total_payer}"
+            qr = qrcode.make(qr_data)
 
-            buffered = BytesIO()
-            img.save(buffered, format="PNG")
-            img_str = base64.b64encode(buffered.getvalue()).decode()
+            img_byte_arr = BytesIO()
+            qr.save(img_byte_arr, format='PNG')
+            img_byte_arr.seek(0)
+
+            img_base64 = base64.b64encode(img_byte_arr.getvalue()).decode('utf-8')
+            img_str = f"data:image/png;base64,{img_base64}"
 
             flash('Paiement effectué avec succès!', 'success')
+            session.pop('panier', None)  # Vider le panier après le paiement
+
             return render_template('paiement_success.html', qr_code=img_str, achat_key=achat_key)
+
         except Exception as e:
             cnx.rollback()
             flash('Une erreur est survenue lors du paiement. Veuillez réessayer.', 'error')
             app.logger.error(f"Erreur de paiement : {str(e)}")
             return redirect(url_for('panier'))
+
         finally:
             cur.close()
             cnx.close()
 
-    return render_template('paiement.html')
-
-
+    return render_template('paiement.html', form=form)
 
 @app.route('/download_qr/<achat_key>')
 def download_qr(achat_key):
@@ -325,11 +324,13 @@ def download_qr(achat_key):
 
     return send_file(buffered, mimetype='image/png', as_attachment=True, download_name=f'qr_code_{achat_key}.png')
 
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
+    form = forms.LoginForm()
+    if form.validate_on_submit():
+        email = form.email.data
+        password = form.password.data
         
         cnx = get_db_connection()
         cur = cnx.cursor()
@@ -344,25 +345,24 @@ def login():
             return redirect(url_for('index'))
         else:
             flash('Email ou mot de passe incorrect.', 'error')
-    return render_template('login.html')
+    return render_template('login.html', form=form)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    if request.method == 'POST':
-        firstname = request.form['firstname']
-        secondname = request.form['secondname']
-        email = request.form['email']
-        password = request.form['password']
-        confirm_password = request.form['confirm_password']
+    form = forms.RegistrationForm()
+    if form.validate_on_submit():
+        firstname = form.firstname.data
+        secondname = form.secondname.data
+        email = form.email.data
+        password = form.password.data
+        confirm_password = form.confirm_password.data  # Utiliser le champ du formulaire
 
-        # Validation de l'adresse e-mail
-        if not re.match(r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$', email):
-            flash('Adresse e-mail invalide.', 'error')
-            return redirect(url_for('register'))
-        
-        # Validation des mots de passe
-        if password != confirm_password:
-            flash('Les mots de passe ne correspondent pas.', 'error')
+        # Vérification de l'unicité de l'email
+        cnx = get_db_connection()
+        cur = cnx.cursor()
+        cur.execute("SELECT id FROM users WHERE email = %s", (email,))
+        if cur.fetchone():
+            flash('Cette adresse email est déjà utilisée.', 'error')
             return redirect(url_for('register'))
 
         # Hachage du mot de passe
@@ -370,10 +370,6 @@ def register():
         registration_key = str(uuid.uuid4())  # Générer une clé d'enregistrement unique
         
         try:
-            cnx = get_db_connection()
-            cur = cnx.cursor()
-
-            # Insertion de l'utilisateur dans la base de données
             cur.execute("""
                 INSERT INTO users (firstname, secondname, email, password, registration_key) 
                 VALUES (%s, %s, %s, %s, %s)
@@ -394,14 +390,13 @@ def register():
 
         return redirect(url_for('login'))
     
-    return render_template('register.html')
-
+    return render_template('register.html', form=form)
 
 def send_validation_email(to_email, validation_link):
     # Préparer l'envoi de l'e-mail via l'API Mailgun
     response = requests.post(
         f'https://api.mailgun.net/v3/{os.getenv("MAILGUN_DOMAIN")}/messages',
-        auth=('api', os.getenv('MAILGUN_API_KEY')),  # Assurez-vous que la clé API est stockée ici
+        auth=('api', os.getenv('MAILGUN_API_KEY')),
         data={
             'from': os.getenv('MAILGUN_USERNAME'),
             'to': to_email,
@@ -410,43 +405,10 @@ def send_validation_email(to_email, validation_link):
         }
     )
     
-    # Optionnel : vérifier la réponse pour gérer les erreurs
     if response.status_code != 200:
         app.logger.error(f"Erreur lors de l'envoi de l'e-mail : {response.text}")
     else:
         app.logger.info("E-mail de validation envoyé avec succès.")
-
-@app.route('/validate', methods=['GET'])
-def validate():
-    registration_key = request.args.get('key')
-
-    try:
-        cnx = get_db_connection()
-        cur = cnx.cursor()
-        
-        # Vérifier si la clé d'enregistrement existe dans la base de données
-        cur.execute("SELECT * FROM users WHERE registration_key = %s", (registration_key,))
-        user = cur.fetchone()
-
-        if user:
-            # Optionnel : Activer le compte ou mettre à jour le statut
-            # cur.execute("UPDATE users SET is_active = 1 WHERE registration_key = %s", (registration_key,))
-            # cnx.commit()
-
-            flash('Votre e-mail a été validé avec succès. Vous pouvez maintenant vous connecter.', 'success')
-        else:
-            flash('Clé de validation invalide ou expirée.', 'error')
-
-    except mysql.connector.Error as err:
-        app.logger.error(f"Erreur lors de la validation : {err}")
-        flash('Une erreur est survenue lors de la validation. Veuillez réessayer.', 'error')
-    
-    finally:
-        cur.close()
-        cnx.close()
-
-    # Rediriger vers la page de connexion
-    return redirect(url_for('login'))
 
 @app.route('/logout')
 def logout():
@@ -457,29 +419,15 @@ def logout():
 @app.route('/mes_achats')
 def mes_achats():
     if 'user_id' not in session:
-        flash('Veuillez vous connecter pour accéder à vos achats.', 'error')
+        flash('Veuillez vous connecter pour voir vos achats.', 'error')
         return redirect(url_for('login'))
 
-    user_id = session['user_id']
-    achats = []
-
-    try:
-        cnx = get_db_connection()
-        cur = cnx.cursor()
-        # Récupérer les achats de l'utilisateur
-        cur.execute("""
-            SELECT a.achat_key, b.nom, a.quantite, a.date_achat 
-            FROM achats a
-            JOIN billets b ON a.billet_id = b.id
-            WHERE a.user_id = %s
-        """, (user_id,))
-        achats = cur.fetchall()
-    except mysql.connector.Error as err:
-        app.logger.error(f"Erreur lors de la récupération des achats : {err}")
-        flash('Une erreur est survenue lors de la récupération de vos achats.', 'error')
-    finally:
-        cur.close()
-        cnx.close()
+    cnx = get_db_connection()
+    cur = cnx.cursor()
+    cur.execute("SELECT id, montant, achat_key, date_achat FROM achats WHERE user_id = %s", (session['user_id'],))
+    achats = cur.fetchall()
+    cur.close()
+    cnx.close()
 
     return render_template('mes_achats.html', achats=achats)
 

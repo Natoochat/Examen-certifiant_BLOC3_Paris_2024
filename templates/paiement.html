@@ -1,15 +1,25 @@
-{% extends "layout.html" %} 
-{% block content %}
+{% extends "layout.html" %} {% block content %}
 <h1>Paiement</h1>
 <form method="POST">
+  {{ form.hidden_tag() }}
+
   <label for="card_number">Numéro de carte :</label>
-  <input type="text" id="card_number" name="card_number" required pattern="\d{16}" title="Veuillez entrer un numéro de carte valide (16 chiffres)." />
+  {{ form.card_number(size=16, id="card_number") }}<br />
+  {% for error in form.card_number.errors %}
+  <span style="color: red">[{{ error }}]</span>
+  {% endfor %}
 
   <label for="expiration">Date d'expiration (MM/AA) :</label>
-  <input type="text" id="expiration" name="expiration" required placeholder="MM/AA" pattern="(0[1-9]|1[0-2])\/\d{2}" title="Format : MM/AA" />
+  {{ form.expiration(size=5, id="expiration", placeholder="MM/AA") }}<br />
+  {% for error in form.expiration.errors %}
+  <span style="color: red">[{{ error }}]</span>
+  {% endfor %}
 
   <label for="cvv">CVV :</label>
-  <input type="text" id="cvv" name="cvv" required pattern="\d{3}" title="Veuillez entrer un CVV valide (3 chiffres)." />
+  {{ form.cvv(size=3, id="cvv") }}<br />
+  {% for error in form.cvv.errors %}
+  <span style="color: red">[{{ error }}]</span>
+  {% endfor %}
 
   <button type="submit" class="btn">Payer</button>
 </form>

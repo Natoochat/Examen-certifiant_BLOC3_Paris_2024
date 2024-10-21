@@ -1,7 +1,7 @@
 {% extends "layout.html" %} {% block content %}
 <h1>Paiement réussi</h1>
 <p>Votre paiement a été effectué avec succès. Voici votre QR code :</p>
-<img src="data:image/png;base64,{{ qr_code }}" alt="QR Code" />
+<img src="{{ qr_code }}" alt="QR Code" />
 <p>Clé d'achat : {{ achat_key }}</p>
 <a
   href="{{ url_for('download_qr', achat_key=achat_key) }}"

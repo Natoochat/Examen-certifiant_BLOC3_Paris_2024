@@ -1,11 +1,18 @@
 {% extends "layout.html" %} {% block content %}
 <h1>Connexion</h1>
 <form method="POST">
+  {{ form.hidden_tag() }}
   <label for="email">Email :</label>
-  <input type="email" id="email" name="email" required />
+  {{ form.email(size=32, id="email") }}<br />
+  {% for error in form.email.errors %}
+  <span style="color: red">[{{ error }}]</span>
+  {% endfor %}
 
   <label for="password">Mot de passe :</label>
-  <input type="password" id="password" name="password" required />
+  {{ form.password(size=32, id="password") }}<br />
+  {% for error in form.password.errors %}
+  <span style="color: red">[{{ error }}]</span>
+  {% endfor %}
 
   <button type="submit" class="btn">Se connecter</button>
 </form>
