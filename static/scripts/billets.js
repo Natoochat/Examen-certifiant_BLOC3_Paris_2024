@@ -4,12 +4,13 @@ document.getElementById('epreuve-select').addEventListener('change', function() 
   if (selectedEpreuve) {
     const targetElement = document.querySelector(selectedEpreuve);
     if (targetElement) {
-      targetElement.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center'  // Centrer l'élément dans la fenêtre
+      const offset = targetElement.getBoundingClientRect().top + window.scrollY - (window.innerHeight / 2) + (targetElement.clientHeight / 2);
+      window.scrollTo({
+        top: offset,
+        behavior: 'smooth' // Scroll en douceur
       });
     } else {
-      console.error('Element introuvable pour :', selectedEpreuve);
+      console.error('Élément introuvable pour :', selectedEpreuve);
     }
   }
 });
