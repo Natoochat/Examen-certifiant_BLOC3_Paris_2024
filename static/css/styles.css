@@ -64,6 +64,7 @@ body {
 .ajouter-panier {
     display: flex;
     flex-direction: column;
+    align-items: flex-end; /* Aligne le contenu à droite */
 }
 
 .radio-container {
@@ -81,6 +82,12 @@ body {
     margin-right: 8px;
 }
 
+.btn-container {
+    display: flex; /* Utilise flexbox pour le conteneur */
+    justify-content: flex-end; /* Aligne les boutons à droite */
+    margin-top: 10px; /* Ajoute un peu d'espace au-dessus des boutons */
+}
+
 .btn-ajouter {
     background-color: #27ae60;
     color: white;
@@ -92,7 +99,7 @@ body {
 }
 
 .btn-ajouter:hover {
-    background-color: #2ecc71;
+    background-color: var(--secondary-color);
 }
 
 .epuise {
@@ -161,7 +168,12 @@ header {
     text-transform: uppercase;
     white-space: nowrap;
     z-index: 1;
-    transition: all 0.3s ease-in-out;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.nav_item:hover {
+    background-color: var(--secondary-color); /* Change la couleur de fond au survol */
+    color: black; /* Change la couleur du texte au survol (optionnel) */
 }
 
 footer {
@@ -187,6 +199,57 @@ footer {
     font-size: 3rem;
     margin: 20px; 
     padding: 10px;
+}
+
+/* Styles pour la page du panier */
+.panier {
+    list-style-type: none; /* Supprime les puces de la liste */
+    padding: 0; /* Supprime le padding */
+    margin: 20px auto; /* Centre la liste et ajoute un peu d'espace */
+    max-width: 800px; /* Limite la largeur de la liste */
+    background-color: #fff; /* Fond blanc pour la liste */
+    border-radius: 8px; /* Coins arrondis */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Ombre légère */
+    padding: 20px; /* Ajoute un padding intérieur */
+}
+
+.panier li {
+    border-bottom: 1px solid #ddd; /* Sépare les éléments avec une ligne */
+    padding: 15px 0; /* Ajoute du padding entre les éléments */
+}
+
+.panier li:last-child {
+    border-bottom: none; /* Supprime la ligne du dernier élément */
+}
+
+.panier h1 {
+    text-align: center; /* Centre le titre */
+    color: var(--gray); /* Couleur du texte */
+    font-size: 2rem; /* Taille du titre */
+}
+
+.btn {
+    background-color: var(--primary-color); /* Couleur de fond du bouton */
+    color: white; /* Couleur du texte du bouton */
+    padding: 10px 15px; /* Padding intérieur du bouton */
+    border: none; /* Pas de bordure */
+    border-radius: 5px; /* Coins arrondis */
+    cursor: pointer; /* Curseur pointer au survol */
+    text-align: center; /* Centrer le texte */
+    display: inline-block; /* Permet d'utiliser width et height */
+    margin-top: 10px; /* Ajoute un peu d'espace au-dessus */
+    transition: background-color 0.3s ease; /* Animation de transition */
+}
+
+.btn:hover {
+    background-color:var(--secondary-color); /* Couleur au survol */
+}
+
+.total-panier {
+    font-size: 1.5rem; /* Taille de la police pour le total */
+    text-align: right; /* Aligne le total à droite */
+    color: var(--gray); /* Couleur du texte */
+    margin-top: 20px; /* Ajoute un espace au-dessus */
 }
 
 /* Responsive design */
@@ -240,3 +303,4 @@ footer {
     outline: 2px solid var(--secondary-color);
     background-color: rgba(255, 215, 0, 0.1); /* Mettre un léger fond doré */
 }
+

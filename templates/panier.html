@@ -3,24 +3,25 @@
 {% if panier %}
 <ul class="panier">
   {% for item in panier %}
-  <li>
+  <li class="panier-item">
     <h2>{{ item.nom }}</h2>
-    <p>Prix unitaire : {{ "%.2f"|format(item.prix|float) }} €</p>
-    <p>Quantité : {{ item.quantite }}</p>
-    <p>Total : {{ "%.2f"|format((item.prix|float * item.quantite|int)) }} €</p>
+    <p class="prix">Prix unitaire : {{ "%.2f"|format(item.prix|float) }} €</p>
+    <p class="quantite">Quantité : {{ item.quantite }}</p>
+    <p class="total">
+      Total : {{ "%.2f"|format((item.prix|float * item.quantite|int)) }} €
+    </p>
     <a href="{{ url_for('supprimer_du_panier', id=item.id) }}" class="btn"
       >Supprimer</a
     >
   </li>
   {% endfor %}
 </ul>
-<p>Total du panier : {{ "%.2f"|format(total|float) }} €</p>
+<p class="total-panier">Total du panier : {{ "%.2f"|format(total|float) }} €</p>
 
 <!-- Formulaire pour procéder au paiement -->
-<form action="{{ url_for('paiement') }}" method="POST">
-  <input type="submit" class="btn" value="Procéder au paiement" />
+<form action="{{ url_for('paiement') }}" method="POST" class="paiement-form">
+  <input type="submit" class="btn btn-paiement" value="Procéder au paiement" />
 </form>
-
 {% else %}
 <p>Votre panier est vide.</p>
 {% endif %} {% endblock %}

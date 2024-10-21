@@ -311,7 +311,7 @@ def paiement():
 
     return render_template('paiement.html', form=form)
 
-@app.route('/edit_billet/<int:id>', methods=['GET', 'POST'])
+
 @app.route('/edit_billet/<int:id>', methods=['GET', 'POST'])
 def edit_billet(id):
     cnx = get_db_connection()
