@@ -1,5 +1,6 @@
-{% extends "layout.html" %} {% block content %}
-<h1 class="titre-page">Billets disponibles</h1>
+{% extends "layout.html" %} {% block title %}Billets Disponibles{% endblock %}
+{% block body_class %}billets-page{% endblock %} {% block content %}
+<h1 class="titre-billets">Billets disponibles</h1>
 
 <!-- Menu déroulant pour sélectionner une épreuve -->
 <div class="select-container">
@@ -26,6 +27,6 @@
   </li>
   {% endfor %}
 </ul>
-
 {% endblock %}
+
 <script src="{{ url_for('static', filename='scripts/billets.js') }}"></script>
