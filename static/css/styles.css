@@ -56,7 +56,6 @@ body {
 .billet-date,
 .billet-lieu,
 .billet-heure {
-<<<<<<< HEAD
     margin: 5px 0;
     font-size: 1.1rem;
     color: #2c3e50;
@@ -227,62 +226,4 @@ footer {
     .hero h1 {
         font-size: 2rem;
     }
-=======
-  margin: 5px 0;
-  font-size: 1.1rem;
-  color: #2c3e50;
-}
-
-.form-panier {
-  display: flex;
-  flex-direction: column;
-}
-
-.radio-container {
-  display: flex;
-  justify-content: space-around;
-  margin-bottom: 10px;
-}
-
-.radio-group {
-  display: flex;
-  align-items: center;
-}
-
-.radio-quantite {
-  margin-right: 8px;
-}
-
-.btn-ajouter {
-  background-color: #27ae60;
-  color: white;
-  padding: 10px 15px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 1rem;
-}
-
-.btn-ajouter:hover {
-  background-color: #2ecc71;
-}
-
-.epuise {
-  color: red;
-  font-size: 1.2rem;
-  text-align: center;
-  font-weight: bold;
-}
-
-.select-container {
-  margin-bottom: 20px;
-  text-align: center;
-}
-
-.epreuve-select {
-  padding: 10px;
-  font-size: 1.1rem;
-  border-radius: 5px;
-  border: 1px solid #ddd;
->>>>>>> c552466a0d23274257cae8d7a5457433ef94f098
 }
