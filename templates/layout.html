@@ -21,14 +21,12 @@
   <body>
     <header>
       <nav class="navbar">
+        <img
+          class="mascotte-logo"
+          src="{{ url_for('static', filename='img/mascotte-jo.png') }}"
+          alt="Mascotte des JO sur la tour eiffel"
+        />
         <ul class="nav_list">
-          <li class="nav_img">
-            <img
-              class="mascotte-logo"
-              src="../static/img/mascotte-jo.png"
-              alt="Mascotte des JO sur la tour eiffel"
-            />
-          </li>
           <li class="nav_item"><a href="{{ url_for('index') }}">Accueil</a></li>
           <li class="nav_item">
             <a href="{{ url_for('billets') }}">Billets</a>
