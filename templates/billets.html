@@ -1,42 +1,31 @@
 {% extends "layout.html" %} {% block content %}
-<h1>Billets disponibles</h1>
+<h1 class="titre-page">Billets disponibles</h1>
+
+<!-- Menu déroulant pour sélectionner une épreuve -->
+<div class="select-container">
+  <label for="epreuve-select">Sélectionner une épreuve :</label>
+  <select id="epreuve-select" class="epreuve-select">
+    <option value="">-- Choisir une épreuve --</option>
+    {% for billet in billets %}
+    <option value="#epreuve-{{ billet[0] }}">{{ billet[1] }}</option>
+    {% endfor %}
+  </select>
+</div>
+
 <ul class="billets">
   {% for billet in billets %}
-  <li>
-    <h2>{{ billet[1] }}</h2>
-    <p>Prix : {{ billet[2] }} €</p>
-    <p>Disponibles : {{ billet[3] }}</p>
-    <p>Date : {{ billet[4] }}</p>
-    <p>Lieu : {{ billet[5] }}</p>
-    <p>Heure : {{ billet[6] }}</p>
-
-    {% if billet[3] > 0 %}
-    <form
-      action="{{ url_for('ajouter_au_panier', id=billet[0]) }}"
-      method="post"
-    >
-      <div class="radio-container">
-        {% for quantite in [1, 2, 4] %}
-        <div class="radio-group">
-          <input
-            type="radio"
-            id="{{ quantite }}_{{ billet[0] }}"
-            name="quantite"
-            value="{{ quantite }}"
-          />
-          <label for="{{ quantite }}_{{ billet[0] }}">
-            {{ quantite == 1 and "Solo" or (quantite == 2 and "Duo" or
-            "Famille") }} ({{ quantite }})
-          </label>
-        </div>
-        {% endfor %}
-      </div>
-      <button type="submit" class="btn">Ajouter au panier</button>
-    </form>
-    {% else %}
-    <p class="epuise">Aucun billet disponible.</p>
-    {% endif %}
+  <li class="billet-item" id="epreuve-{{ billet[0] }}">
+    <div class="billet-details">
+      <h2 class="billet-titre">{{ billet[1] }}</h2>
+      <p class="billet-prix">Prix : {{ billet[2] }} €</p>
+      <p class="billet-dispo">Disponibles : {{ billet[3] }}</p>
+      <p class="billet-date">Date : {{ billet[4] }}</p>
+      <p class="billet-lieu">Lieu : {{ billet[5] }}</p>
+      <p class="billet-heure">Heure : {{ billet[6] }}</p>
+    </div>
   </li>
   {% endfor %}
 </ul>
+
 {% endblock %}
+<script src="{{ url_for('static', filename='scripts/billets.js') }}"></script>
