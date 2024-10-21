@@ -61,7 +61,7 @@ body {
     color: #2c3e50;
 }
 
-.ajout-panier {
+.ajouter-panier {
     display: flex;
     flex-direction: column;
 }
@@ -81,7 +81,7 @@ body {
     margin-right: 8px;
 }
 
-.btn-ajout {
+.btn-ajouter {
     background-color: #27ae60;
     color: white;
     padding: 10px 15px;
@@ -91,7 +91,7 @@ body {
     font-size: 1rem;
 }
 
-.btn-ajout:hover {
+.btn-ajouter:hover {
     background-color: #2ecc71;
 }
 
@@ -226,4 +226,9 @@ footer {
     .hero h1 {
         font-size: 2rem;
     }
+}
+
+.highlight {
+    outline: 2px solid var(--secondary-color);
+    background-color: rgba(255, 215, 0, 0.1); /* Mettre un léger fond doré */
 }

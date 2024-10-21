@@ -38,7 +38,6 @@
           <li class="nav_item">
             <a href="{{ url_for('mes_achats') }}">Mes Achats</a>
           </li>
-          <!-- Lien vers Mes Achats -->
           <li class="nav_item">
             <a href="{{ url_for('logout') }}">Déconnexion</a>
           </li>
@@ -62,5 +61,7 @@
     <footer>
       <p>&copy; 2024 Site de vente de billets</p>
     </footer>
+
+    <script src="{{ url_for('static', filename='scripts/billets.js') }}"></script>
   </body>
 </html>
