@@ -1,20 +1,31 @@
 {% extends "layout.html" %} {% block content %}
 <h1>Connexion</h1>
+
+{% with messages = get_flashed_messages() %} {% if messages %}
+<ul>
+  {% for message in messages %}
+  <li style="color: red">{{ message }}</li>
+  {% endfor %}
+</ul>
+{% endif %} {% endwith %}
+
 <form method="POST">
   {{ form.hidden_tag() }}
+
   <label for="email">Email :</label>
   {{ form.email(size=32, id="email") }}<br />
   {% for error in form.email.errors %}
-  <span style="color: red">[{{ error }}]</span>
+  <span class="error">[{{ error }}]</span>
   {% endfor %}
 
   <label for="password">Mot de passe :</label>
   {{ form.password(size=32, id="password") }}<br />
   {% for error in form.password.errors %}
-  <span style="color: red">[{{ error }}]</span>
+  <span class="error">[{{ error }}]</span>
   {% endfor %}
 
-  <button type="submit" class="btn">Se connecter</button>
+  <button type="submit" class="btn btn-primary">Se connecter</button>
 </form>
+
 <p>Pas encore de compte ? <a href="{{ url_for('register') }}">S'inscrire</a></p>
 {% endblock %}

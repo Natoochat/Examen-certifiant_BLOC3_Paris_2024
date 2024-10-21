@@ -1,0 +1,18 @@
+<ul class="billets">
+  {% for billet in billets %}
+  <li class="billet-item" id="epreuve-{{ billet[0] }}">
+    <div class="billet-details">
+      <h2 class="billet-titre">{{ billet[1] }}</h2>
+      <p class="billet-prix">Prix : {{ billet[2] }} €</p>
+      <p class="billet-dispo">Disponibles : {{ billet[3] }}</p>
+      <p class="billet-date">Date : {{ billet[4] }}</p>
+      <p class="billet-lieu">Lieu : {{ billet[5] }}</p>
+      <p class="billet-heure">Heure : {{ billet[6] }}</p>
+    </div>
+    <div class="billet-actions">
+      <a href="{{ url_for('edit_billet', id=billet[0]) }}">Modifier</a>
+      <a href="{{ url_for('delete_billet', id=billet[0]) }}">Supprimer</a>
+    </div>
+  </li>
+  {% endfor %}
+</ul>

@@ -311,6 +311,73 @@ def paiement():
 
     return render_template('paiement.html', form=form)
 
+@app.route('/edit_billet/<int:id>', methods=['GET', 'POST'])
+@app.route('/edit_billet/<int:id>', methods=['GET', 'POST'])
+def edit_billet(id):
+    cnx = get_db_connection()
+    cur = cnx.cursor()
+    
+    if request.method == 'POST':
+        nom = request.form.get('nom')
+        prix = request.form.get('prix', type=float)
+        disponible = request.form.get('disponible', type=int)
+        date = request.form.get('date')
+        lieu = request.form.get('lieu')
+        heure = request.form.get('heure')
+
+        try:
+            # Mise à jour des informations du billet
+            cur.execute("""
+                UPDATE billets 
+                SET nom = %s, prix = %s, disponible = %s, date = %s, lieu = %s, heure = %s 
+                WHERE id = %s
+            """, (nom, prix, disponible, date, lieu, heure, id))
+            cnx.commit()
+
+            flash('Billet mis à jour avec succès!', 'success')
+            return redirect(url_for('admin'))  # Redirige vers la liste des billets
+        except mysql.connector.Error as err:
+            flash('Erreur lors de la mise à jour du billet.', 'error')
+            app.logger.error(f"Erreur de mise à jour : {err}")
+    else:
+        # Récupère le billet à éditer
+        cur.execute("SELECT id, nom, prix, disponible, date, lieu, heure FROM billets WHERE id = %s", (id,))
+        billet = cur.fetchone()
+        if not billet:
+            flash('Billet introuvable.', 'error')
+            return redirect(url_for('admin'))
+
+    cur.close()
+    cnx.close()
+
+    return render_template('edit_billet.html', billet=billet)
+
+@app.route('/delete_billet/<int:id>', methods=['POST'])
+def delete_billet(id):
+    cnx = get_db_connection()
+    cur = cnx.cursor()
+
+    # Vérifier si le billet est dans la table des achats
+    cur.execute("SELECT COUNT(*) FROM achats WHERE billet_id = %s", (id,))
+    count = cur.fetchone()[0]
+
+    if count > 0:
+        flash("Le billet ne peut pas être supprimé car il est associé à des achats.", 'error')
+    else:
+        try:
+            # Supprimer le billet de la table billets
+            cur.execute("DELETE FROM billets WHERE id = %s", (id,))
+            cnx.commit()
+            flash("Billet supprimé avec succès!", 'success')
+        except mysql.connector.Error as err:
+            flash("Erreur lors de la suppression du billet.", 'error')
+            app.logger.error(f"Erreur de suppression : {err}")
+
+    cur.close()
+    cnx.close()
+    return redirect(url_for('admin'))  # Redirige vers la page admin
+
+
 @app.route('/download_qr/<achat_key>')
 def download_qr(achat_key):
     qr = qrcode.QRCode(version=1, box_size=10, border=5)
@@ -334,18 +401,40 @@ def login():
         
         cnx = get_db_connection()
         cur = cnx.cursor()
-        cur.execute("SELECT id, password FROM users WHERE email = %s", (email,))
+        cur.execute("SELECT id, password, role FROM users WHERE email = %s", (email,))
         user = cur.fetchone()
         cur.close()
         cnx.close()
         
         if user and bcrypt.check_password_hash(user[1], password):
             session['user_id'] = user[0]
+            session['role'] = user[2]  # Stocke le rôle dans la session
+            
+            # Redirection vers la page admin si l'utilisateur est un admin
+            if user[2] == 'admin':
+                return redirect(url_for('admin'))
+            
             flash('Connexion réussie !', 'success')
             return redirect(url_for('index'))
         else:
             flash('Email ou mot de passe incorrect.', 'error')
     return render_template('login.html', form=form)
+
+@app.route('/admin')
+def admin():
+    if 'user_id' not in session or session.get('role') != 'admin':
+        flash('Accès refusé. Vous devez être un administrateur pour voir cette page.', 'error')
+        return redirect(url_for('index'))
+
+    # Récupération des billets pour l'affichage dans l'admin
+    cnx = get_db_connection()
+    cur = cnx.cursor()
+    cur.execute("SELECT id, nom, prix, disponible FROM billets")
+    billets = cur.fetchall()
+    cur.close()
+    cnx.close()
+
+    return render_template('admin_dashboard.html', billets=billets)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
